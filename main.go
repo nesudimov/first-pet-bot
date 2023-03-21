@@ -2,46 +2,38 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"io"
 	"log"
-	"net/http"
 
-	"github.com/nesudimov/first-pet-bot/clients/telegram"
+	tg "github.com/nesudimov/first-pet-bot/clients/telegram"
+	event_consumer "github.com/nesudimov/first-pet-bot/consumer/event-consumer"
+	"github.com/nesudimov/first-pet-bot/events/telegram"
+	"github.com/nesudimov/first-pet-bot/storage/files"
 )
 
 const (
-	tgBotHost = "api.telegram.org"
-	token     = "6219465977:AAGAaZsk_sQGphPz2xRXjSv6jdrQJLhCHkI"
+	tgBotHost   = "api.telegram.org"
+	storagePath = "storage"
+	batchSize   = 100
 )
 
 func main() {
 
-	tgClient := telegram.New(tgBotHost, mustToken())
+	eventsProcessor := telegram.New(
+		tg.New(tgBotHost, mustToken()),
+		files.New(storagePath),
+	)
+	log.Printf("service started")
 
-	// fetcher = fetcher.New()
+	consumer := event_consumer.New(eventsProcessor, eventsProcessor, batchSize)
 
-	// processor = processor.New()
-
-	// cosumer.Start(fetcher, processor)
-
-	tgApiUrl := "https://api.telegram.org/bot"
-	method := "/getUpdates"
-	url := tgApiUrl + token + method
-
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Fatal(err)
+	if err := consumer.Start(); err != nil {
+		log.Fatal("Service is stopped", err)
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-
-	fmt.Println(string(body))
 }
 
 func mustToken() string {
 	token := flag.String(
-		"token-bot-token",
+		"tg-bot-token",
 		"",
 		"token for access to telegram bot",
 	)

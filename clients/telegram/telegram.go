@@ -22,8 +22,8 @@ const (
 	sendMessageMethod = "sendMessage"
 )
 
-func New(host, token string) Client {
-	return Client{
+func New(host, token string) *Client {
+	return &Client{
 		host,
 		newBasePath(token),
 		http.Client{},
@@ -57,10 +57,11 @@ func (c *Client) Updates(offset int, limit int) (updates []Update, err error) {
 
 func (c *Client) SendMessage(chatID int, text string) error {
 	q := url.Values{}
-	q.Add("char_id", strconv.Itoa(chatID))
+	q.Add("chat_id", strconv.Itoa(chatID))
 	q.Add("text", text)
 
-	if _, err := c.doRequest(sendMessageMethod, q); err != nil {
+	_, err := c.doRequest(sendMessageMethod, q)
+	if err != nil {
 		return e.Wrap("can't send message", err)
 	}
 

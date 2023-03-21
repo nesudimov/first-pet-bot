@@ -21,13 +21,10 @@ func (p *Processor) doCmd(text string, chatID int, username string) error {
 
 	log.Printf("got new command '%s' from '%s'", text, username)
 
-	// add page: http://...
-	// rnd page: /rnd
-	// help: /help
-	// start: /start: hi + help
-
 	if isAddCmd(text) {
 		return p.savePage(chatID, text, username)
+	} else {
+		log.Println("event is not an url")
 	}
 
 	switch text {
